@@ -37,13 +37,7 @@ type Draw struct {
 	red   int
 }
 
-func parseDraw(drawStr string) (*Draw, error) {
-	draw := &Draw{
-		green: 0,
-		red:   0,
-		blue:  0,
-	}
-
+func (draw *Draw) setColors(drawStr string) error {
 	var finalErr error = nil
 
 	pieces := strings.Split(drawStr, ",")
@@ -67,7 +61,18 @@ func parseDraw(drawStr string) (*Draw, error) {
 		}
 	})
 
-	return draw, finalErr
+	return finalErr
+}
+
+func parseDraw(drawStr string) (*Draw, error) {
+	draw := &Draw{
+		green: 0,
+		red:   0,
+		blue:  0,
+	}
+
+	err := draw.setColors(drawStr)
+	return draw, err
 }
 
 func setIsPossible(game *Game) {
