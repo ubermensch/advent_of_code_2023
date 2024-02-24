@@ -78,7 +78,6 @@ func main() {
 	sum := 0
 	for _, line := range lines {
 		go calcRow(line)
-
 	}
 
 	for i := 0; i < len(lines); i++ {
