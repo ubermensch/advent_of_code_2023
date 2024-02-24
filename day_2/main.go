@@ -9,7 +9,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 const inputFile = "/Users/frankhmeidan/golang/advent_of_code/day_2/input.txt"
@@ -20,9 +19,7 @@ const (
 	maxBlue  = 14
 )
 
-var wg sync.WaitGroup
 var gameChannel = make(chan *Game)
-var possibleChannel = make(chan *Game)
 var games []*Game
 
 type Game struct {
@@ -144,14 +141,26 @@ func main() {
 		panic("could not scan file")
 	}
 
+	var lines []string
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		currGame, err := newGame(line)
-		if err != nil {
-			panic("could not create game")
-		}
-		games = append(games, currGame)
+		lines = append(lines, line)
 	}
+
+	for _, line := range lines {
+		go func(l string) {
+			currGame, err := newGame(l)
+			if err != nil {
+				panic("could not create game")
+			}
+			gameChannel <- currGame
+		}(line)
+	}
+	for i := 0; i < len(lines); i++ {
+		games = append(games, <-gameChannel)
+	}
+
 	possible := funk.Filter(games, func(game *Game) bool {
 		return game.isPossible
 	})
