@@ -2,9 +2,15 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
+	"regexp"
+	"strconv"
+	"strings"
+	"unicode"
 )
 
 const inputFile = "/Users/frankhmeidan/golang/advent_of_code/day_3/input.txt"
@@ -19,9 +25,29 @@ type Point struct {
 	value rune // the value of this point
 }
 
+func (p *Point) isDot() bool {
+	return p.value == '.'
+}
+func (p *Point) isDigit() bool {
+	return unicode.IsDigit(p.value)
+}
+func (p *Point) isSymbol() bool {
+	return unicode.IsSymbol(p.value)
+}
+
 // The full schematic document
 type Schematic struct {
-	points [][]Point
+	points [][]*Point
+}
+
+func (s *Schematic) getPoint(x int, y int) (*Point, error) {
+	return s.points[x][y], nil
+}
+
+type PartNumber struct {
+	number  int
+	points  []*Point
+	isValid bool
 }
 
 func fileScanner() (*bufio.Scanner, *os.File) {
@@ -37,21 +63,71 @@ func fileScanner() (*bufio.Scanner, *os.File) {
 	}
 
 	return scanner, file
-
 }
 
+func partNumbersFromRow(row []*Point) ([]*PartNumber, error) {
+	rowStr := ""
+	for _, curr := range row {
+		rowStr += string(curr.value)
+	}
+	re := regexp.MustCompile("\\D+")
+	splits := re.Split(rowStr, -1)
+	var numbers []string
+	for _, curr := range splits {
+		if len(curr) > 0 {
+			numbers = append(numbers, curr)
+		}
+	}
+
+	var partNumbers []*PartNumber
+	for _, num := range numbers {
+		index := strings.Index(rowStr, num)
+		nInt, err := strconv.Atoi(num)
+		if err != nil {
+			return nil, errors.New("could not read number")
+		}
+
+		pn := &PartNumber{
+			number:  nInt,
+			points:  row[index : index+len(num)],
+			isValid: false,
+		}
+
+		partNumbers = append(partNumbers, pn)
+	}
+
+	return partNumbers, nil
+}
+
+// Finds the part numbers hidden in the Schematic
+func (s *Schematic) getPartNumbers() ([]*PartNumber, error) {
+	var parts []*PartNumber
+	for x := 0; x < len(s.points); x++ {
+		row := s.points[x]
+		rowPartNumbers, err := partNumbersFromRow(row)
+		if err != nil {
+			return nil, errors.New(
+				fmt.Sprintf("could not get part numbers from row %d", x),
+			)
+		}
+		parts = append(parts, rowPartNumbers...)
+	}
+	return parts, nil
+}
+
+// Build a new Schematic from the input file
 func newSchematic() (*Schematic, error) {
 	scanner, file := fileScanner()
 	defer file.Close()
 
-	var points [][]Point
+	var points [][]*Point
 	y := 0
 
 	for scanner.Scan() {
-		var linePoints []Point
+		var linePoints []*Point
 		line := scanner.Text()
-		for char, x := range line {
-			linePoints = append(linePoints, Point{x: int(x), y: y, value: rune(char)})
+		for x, char := range line {
+			linePoints = append(linePoints, &Point{x: x, y: y, value: char})
 		}
 
 		points = append(points, linePoints)
@@ -65,5 +141,8 @@ func newSchematic() (*Schematic, error) {
 
 func main() {
 	schematic, _ := newSchematic()
-	fmt.Printf("Schematic : %v", schematic.points)
+	_, err := schematic.getPartNumbers()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
