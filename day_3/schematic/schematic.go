@@ -40,33 +40,51 @@ func (p *Point) isDot() bool {
 	return p.value == '.'
 }
 func (p *Point) isDigit() bool {
+
 	return unicode.IsDigit(p.value)
 }
+
+// For our purposes, a point is either:
+// * a digit (part of a part number)
+// * a dot (to be ignored), or
+// * a symbol (anything else)
 func (p *Point) isSymbol() bool {
-	return unicode.IsSymbol(p.value)
+	return !p.isDot() && !p.isDigit()
 }
 
 func (pn *PartNumber) adjacentPoints() ([][]int, error) {
 	if len(pn.points) == 0 {
 		return nil, errors.New("empty part number (points not set)")
 	}
-	origin := pn.points[0]
-	points := [][]int{
-		{origin.x - 1, origin.y - 1},
-		{origin.x - 1, origin.y},
-		{origin.x - 1, origin.y + 1},
-		{origin.x, origin.y - 1},
-		{origin.x, origin.y + 1},
-		{origin.x + 1, origin.y - 1},
-		{origin.x + 1, origin.y},
-		{origin.x + 1, origin.y + 1},
+	var neighbours [][]int
+	for _, point := range pn.points {
+		neighbours = append(
+			neighbours,
+			[]int{point.x, point.y + 1},
+			[]int{point.x, point.y - 1},
+			[]int{point.x + 1, point.y + 1},
+			[]int{point.x + 1, point.y - 1},
+			[]int{point.x + 1, point.y},
+			[]int{point.x - 1, point.y + 1},
+			[]int{point.x - 1, point.y - 1},
+			[]int{point.x - 1, point.y},
+		)
 	}
 
-	return points, nil
+	// We know there are some duplicates here,
+	// its fine for now...
+	return neighbours, nil
 }
 
-func (s *Schematic) getPoint(x int, y int) (*Point, error) {
-	return s.points[x][y], nil
+// Print some debugging information for the PartNumber
+func (pn *PartNumber) ToString() string {
+	return fmt.Sprintf(
+		"[%d] at [%d - %d, %d]",
+		pn.Number,
+		pn.points[0].x,
+		pn.points[len(pn.points)-1].x,
+		pn.points[0].y,
+	)
 }
 
 func (s *Schematic) setPartNumberValidity() error {
@@ -93,7 +111,7 @@ func (s *Schematic) isPartNumberValid(pn *PartNumber) (bool, error) {
 	hasAdjacentSymbol := lo.SomeBy(
 		adjacent,
 		func(point []int) bool {
-			row, col := point[0], point[1]
+			col, row := point[0], point[1]
 
 			// Not valid if the adjacent point is outside of bounds
 			if row >= len(s.points) || row < 0 {
@@ -113,6 +131,16 @@ func (s *Schematic) isPartNumberValid(pn *PartNumber) (bool, error) {
 		},
 	)
 
+	if !hasAdjacentSymbol {
+		fmt.Println(
+			fmt.Sprintf(
+				"[Valid : %t] Part Number : %s",
+				hasAdjacentSymbol,
+				pn.ToString(),
+			),
+		)
+	}
+
 	// Part number is valid if we have at least 1 adjacent symbol
 	return hasAdjacentSymbol, nil
 }
@@ -120,12 +148,12 @@ func (s *Schematic) isPartNumberValid(pn *PartNumber) (bool, error) {
 // Finds the part numbers hidden in the Schematic
 func (s *Schematic) setPartNumbers() error {
 	var parts []*PartNumber
-	for x := 0; x < len(s.points); x++ {
-		row := s.points[x]
+	for y := 0; y < len(s.points); y++ {
+		row := s.points[y]
 		rowPartNumbers, err := partNumbersFromRow(row)
 		if err != nil {
 			return errors.New(
-				fmt.Sprintf("could not get part numbers from row %d", x),
+				fmt.Sprintf("could not get part numbers from row %d", y),
 			)
 		}
 		parts = append(parts, rowPartNumbers...)
