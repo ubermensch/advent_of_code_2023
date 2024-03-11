@@ -2,11 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/samber/lo"
-	"log"
 	"os"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -90,7 +91,6 @@ func parseMapScanner(scanner *bufio.Scanner, mapLine string) (*Map, error) {
 	pieces := strings.Split(mapLine, " ")
 	sourceAndTarget := strings.Split(pieces[0], "-")
 	source, target := sourceAndTarget[0], sourceAndTarget[2]
-	fmt.Println("source: ", source, " target: ", target)
 
 	var lookupRanges [][]int64
 
@@ -116,6 +116,39 @@ func parseMapScanner(scanner *bufio.Scanner, mapLine string) (*Map, error) {
 	return NewMap(source, target, lookupRanges), nil
 }
 
+// Traverses the set of maps given, finding the location number
+// matching the given seed number
+func seedLocation(seed int64, maps []*Map) (int64, error) {
+	var location, currSource, currTarget int64
+	var sourceType, targetType string
+
+	currSource = seed
+	sourceType = "seed"
+
+	// traverse the maps, where target of current source
+	// becomes next source. Stop when we have found the location value.
+	for {
+		currMap, ok := lo.Find(maps, func(m *Map) bool {
+			return m.source == sourceType
+		})
+		if !ok {
+			return 0, errors.New("map for source not found")
+		}
+		currTarget = currMap.Find(currSource)
+		targetType = currMap.target
+
+		if targetType == "location" {
+			location = currTarget
+			break
+		} else {
+			currSource = currTarget
+			sourceType = targetType
+		}
+	}
+
+	return location, nil
+}
+
 func main() {
 	var seeds []int64
 	var maps []*Map
@@ -126,6 +159,7 @@ func main() {
 	scanner.Scan()
 	line := scanner.Text()
 	seeds = getSeeds(line)
+
 	for scanner.Scan() {
 		line = scanner.Text()
 
@@ -144,6 +178,15 @@ func main() {
 		}
 	}
 
-	log.Println(seeds)
-	log.Println(maps)
+	var seedLocations []int64
+	for _, currSeed := range seeds {
+		currLocation, err := seedLocation(currSeed, maps)
+		if err != nil {
+			panic("could not find location for seed")
+		}
+		seedLocations = append(seedLocations, currLocation)
+	}
+
+	lowest := slices.Min(seedLocations)
+	fmt.Println("Lowest location is: ", lowest)
 }
