@@ -57,6 +57,8 @@ func (pn *PartNumber) adjacentPoints() ([][]int, error) {
 		return nil, errors.New("empty part number (points not set)")
 	}
 	var neighbours [][]int
+	// TODO - probably have bug here! Ensure diagonal symbol on single-digit number
+	// is supported
 	for _, point := range pn.points {
 		neighbours = append(
 			neighbours,
