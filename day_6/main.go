@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 const inputFile = "/Users/frankhmeidan/golang/advent_of_code/day_6/input.txt"
@@ -37,13 +36,31 @@ type Race struct {
 
 // returns the possible strategies of Race `r` that beat the benchmark distance
 // `r.distance`
-func (r *Race) WinningStrategies() ([]*Strategy, error) {
-	return nil, nil
+func (r *Race) winningStrategies() []*Strategy {
+	return lo.Filter(r.strategies, func(s *Strategy, _ int) bool {
+		return s.distance > r.distance
+	})
 }
 
 // calculates the possible strategies and writes them to `r.strategies`
 func (r *Race) setStrategies() {
-	time.Sleep(1)
+	var strategies []*Strategy
+
+	for time := 0; time <= r.time; time++ {
+		// when button is let go, boat will move at
+		// 1 millimetre per millisecond of pressTime
+		speed := time
+
+		// will travel distance of (speed * time left)
+		distance := (r.time - time) * speed
+
+		strategies = append(strategies, &Strategy{
+			pressTime: time,
+			distance:  distance,
+		})
+	}
+
+	r.strategies = strategies
 }
 
 func getRaces(times []int, distances []int) ([]*Race, error) {
@@ -115,6 +132,12 @@ func main() {
 	distances := getInts(strings.Split(lines[1], ":")[1])
 
 	races, _ := getRaces(times, distances)
-	log.Println(fmt.Sprintf("races : %v", races))
+	solution := 1
+	for i, race := range races {
+		solution *= len(race.winningStrategies())
+		log.Println(fmt.Sprintf("race %d has %d winning strategies", i+1, len(race.winningStrategies())))
+	}
+
+	log.Println("Multiplication of winning strategies count is ", solution)
 
 }
