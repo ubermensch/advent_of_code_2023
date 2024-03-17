@@ -1,8 +1,10 @@
 package camelcards
 
 import (
+	"errors"
 	"github.com/samber/lo"
 	"golang.org/x/exp/maps"
+	"slices"
 )
 
 type CardValue rune
@@ -39,7 +41,7 @@ const (
 	highCard     HandType = "high card"
 )
 
-var HandTypes = []HandType{fiveOfAKind, fourOfAKind, fullHouse, threeOfAKind, twoPair, onePair, highCard}
+var handTypeStrength = []HandType{fiveOfAKind, fourOfAKind, fullHouse, threeOfAKind, twoPair, onePair, highCard}
 
 type Hand struct {
 	Cards    []*Card
@@ -93,4 +95,21 @@ func (h *Hand) Type() HandType {
 
 	h.handType = handType(h)
 	return h.handType
+}
+
+func (h *Hand) IsStrongerThan(other *Hand) (bool, error) {
+	var hType, otherType = h.handType, other.handType
+	if hType == "" || otherType == "" {
+		return false, errors.New("one or both hand types not valid")
+	}
+
+	switch {
+	case slices.Index(handTypeStrength, hType) < slices.Index(handTypeStrength, otherType):
+		return true, nil
+	case slices.Index(handTypeStrength, hType) > slices.Index(handTypeStrength, otherType):
+		return false, nil
+	}
+
+	// TODO - secondary ordering
+	return false, errors.New("secondary ordering not implemented yet")
 }

@@ -25,9 +25,14 @@ var testHands = []Hand{
 			&Card{'A'}, &Card{'7'}, &Card{'7'}, &Card{'7'}, &Card{'Q'},
 		},
 	},
+	{
+		Cards: []*Card{
+			&Card{'A'}, &Card{'A'}, &Card{'A'}, &Card{'Q'}, &Card{'Q'},
+		},
+	},
 }
 
-var expectedTypes = []HandType{twoPair, highCard, onePair, threeOfAKind}
+var expectedTypes = []HandType{twoPair, highCard, onePair, threeOfAKind, fullHouse}
 
 func TestHand_Type(t *testing.T) {
 	for i, hand := range testHands {
