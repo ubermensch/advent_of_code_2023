@@ -1,6 +1,7 @@
 package camelcards
 
 import (
+	"github.com/samber/lo"
 	"testing"
 )
 
@@ -57,6 +58,23 @@ func TestHand_IsStrongerThan(t *testing.T) {
 
 		if isStronger != expectStronger {
 			t.Fatalf("[TestHand_IsStrongerThan] failed IsStrongerThan expectation")
+		}
+	}
+}
+
+func Test_SortByStrength(t *testing.T) {
+	toTest := lo.Map(testHands, func(c Hand, i int) *Hand {
+		return &c
+	})
+	toTest = SortByStrength(toTest)
+
+	for i := 1; i < len(toTest); i++ {
+		fail, err := toTest[i-1].IsStrongerThan(toTest[i])
+		if err != nil {
+			t.Fatalf("[Test_SortByStrength] error during strength check")
+		}
+		if fail {
+			t.Fatalf("[Test_SortByStrength] failed: hand at index %d stronger than at index %d", i-1, i)
 		}
 	}
 }

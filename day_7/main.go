@@ -32,4 +32,5 @@ func main() {
 		line := scanner.Text()
 		lines = append(lines, line)
 	}
+
 }

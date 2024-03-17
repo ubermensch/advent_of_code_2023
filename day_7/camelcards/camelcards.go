@@ -5,6 +5,7 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/exp/maps"
 	"slices"
+	"sort"
 )
 
 type CardValue rune
@@ -130,4 +131,15 @@ func (h *Hand) IsStrongerThan(other *Hand) (bool, error) {
 	}
 
 	return hIsStronger, nil
+}
+
+func SortByStrength(hands []*Hand) []*Hand {
+	sort.Slice(hands, func(i, j int) bool {
+		isStronger, err := hands[j].IsStrongerThan(hands[i])
+		if err != nil {
+			panic("cannot sort by strength")
+		}
+		return isStronger
+	})
+	return hands
 }
