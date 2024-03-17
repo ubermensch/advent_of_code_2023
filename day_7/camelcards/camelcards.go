@@ -6,6 +6,7 @@ import (
 	"golang.org/x/exp/maps"
 	"slices"
 	"sort"
+	"strconv"
 )
 
 type CardValue rune
@@ -133,13 +134,32 @@ func (h *Hand) IsStrongerThan(other *Hand) (bool, error) {
 	return hIsStronger, nil
 }
 
-func SortByStrength(hands []*Hand) []*Hand {
-	sort.Slice(hands, func(i, j int) bool {
-		isStronger, err := hands[j].IsStrongerThan(hands[i])
+type Bid struct {
+	Hand      *Hand
+	BidAmount int
+}
+
+func NewBid(cardStr, bidAmount string) (*Bid, error) {
+	bidInt, err := strconv.Atoi(bidAmount)
+	if err != nil {
+		return nil, errors.New("invalid bidAmount string")
+	}
+	cards := lo.Map([]rune(cardStr), func(c rune, i int) *Card {
+		return &Card{
+			value: CardValue(c),
+		}
+	})
+
+	return &Bid{Hand: &Hand{Cards: cards}, BidAmount: bidInt}, nil
+}
+
+func SortByStrength(bids []*Bid) []*Bid {
+	sort.Slice(bids, func(i, j int) bool {
+		isStronger, err := bids[j].Hand.IsStrongerThan(bids[i].Hand)
 		if err != nil {
 			panic("cannot sort by strength")
 		}
 		return isStronger
 	})
-	return hands
+	return bids
 }

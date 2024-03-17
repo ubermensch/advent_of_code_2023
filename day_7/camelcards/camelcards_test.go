@@ -1,7 +1,6 @@
 package camelcards
 
 import (
-	"github.com/samber/lo"
 	"testing"
 )
 
@@ -31,6 +30,14 @@ var testHands = []Hand{
 			&Card{'A'}, &Card{'A'}, &Card{'A'}, &Card{'Q'}, &Card{'Q'},
 		},
 	},
+}
+
+var testBids = []*Bid{
+	{Hand: &testHands[0], BidAmount: 20},
+	{Hand: &testHands[1], BidAmount: 50},
+	{Hand: &testHands[2], BidAmount: 40},
+	{Hand: &testHands[3], BidAmount: 10},
+	{Hand: &testHands[4], BidAmount: 100},
 }
 
 var expectedTypes = []HandType{twoPair, highCard, onePair, threeOfAKind, fullHouse}
@@ -63,13 +70,10 @@ func TestHand_IsStrongerThan(t *testing.T) {
 }
 
 func Test_SortByStrength(t *testing.T) {
-	toTest := lo.Map(testHands, func(c Hand, i int) *Hand {
-		return &c
-	})
-	toTest = SortByStrength(toTest)
+	toTest := SortByStrength(testBids)
 
 	for i := 1; i < len(toTest); i++ {
-		fail, err := toTest[i-1].IsStrongerThan(toTest[i])
+		fail, err := toTest[i-1].Hand.IsStrongerThan(toTest[i].Hand)
 		if err != nil {
 			t.Fatalf("[Test_SortByStrength] error during strength check")
 		}
