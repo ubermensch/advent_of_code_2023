@@ -42,6 +42,7 @@ const (
 )
 
 var handTypeStrength = []HandType{fiveOfAKind, fourOfAKind, fullHouse, threeOfAKind, twoPair, onePair, highCard}
+var cardStrength = []CardValue{A, K, Q, J, T, Nine, Eight, Seven, Six, Five, Four, Three, Two}
 
 type Hand struct {
 	Cards    []*Card
@@ -98,7 +99,7 @@ func (h *Hand) Type() HandType {
 }
 
 func (h *Hand) IsStrongerThan(other *Hand) (bool, error) {
-	var hType, otherType = h.handType, other.handType
+	var hType, otherType = h.Type(), other.Type()
 	if hType == "" || otherType == "" {
 		return false, errors.New("one or both hand types not valid")
 	}
@@ -110,6 +111,23 @@ func (h *Hand) IsStrongerThan(other *Hand) (bool, error) {
 		return false, nil
 	}
 
-	// TODO - secondary ordering
-	return false, errors.New("secondary ordering not implemented yet")
+	// Secondary ordering - find first stronger card in sequence of both hands
+	hIsStronger := false
+	for i, _ := range h.Cards {
+		hCurr, otherCurr := h.Cards[i].value, other.Cards[i].value
+		// If cards are the same strength, go to next card
+		if slices.Index(cardStrength, hCurr) == slices.Index(cardStrength, otherCurr) {
+			continue
+		}
+
+		if slices.Index(cardStrength, hCurr) < slices.Index(cardStrength, otherCurr) {
+			hIsStronger = true
+			break
+		} else {
+			hIsStronger = false
+			break
+		}
+	}
+
+	return hIsStronger, nil
 }

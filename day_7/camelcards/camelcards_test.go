@@ -41,3 +41,22 @@ func TestHand_Type(t *testing.T) {
 		}
 	}
 }
+
+func TestHand_IsStrongerThan(t *testing.T) {
+	strongerMap := map[[2]int]bool{
+		{0, 1}: true,
+		{0, 3}: false,
+		{4, 3}: true,
+	}
+
+	for hands, expectStronger := range strongerMap {
+		isStronger, err := testHands[hands[0]].IsStrongerThan(&testHands[hands[1]])
+		if err != nil {
+			t.Fatalf("[TestHand_IsStrongerThan] unexpected error '%s'", err.Error())
+		}
+
+		if isStronger != expectStronger {
+			t.Fatalf("[TestHand_IsStrongerThan] failed IsStrongerThan expectation")
+		}
+	}
+}
