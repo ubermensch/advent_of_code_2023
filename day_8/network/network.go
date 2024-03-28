@@ -2,11 +2,11 @@ package network
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/samber/lo"
 	"strings"
 )
 
+const Start = "AAA"
 const End = "ZZZ"
 
 type Node struct {
@@ -64,12 +64,11 @@ func NewNetwork(s *bufio.Scanner) (*Network, error) {
 
 }
 
-func (n *Network) StepsToFinish() int64 {
-	steps := int64(0)
-	currNode := n.nodes[0]
+func (n *Network) StepsToFinish() int {
+	steps := 0
+	currNode := n.lookup[Start]
 	exitFound := false
-	fmt.Println("directions: %s", n.directions)
-	fmt.Println("")
+
 	for !exitFound {
 		for _, curr := range n.directions {
 			switch curr {
@@ -81,11 +80,8 @@ func (n *Network) StepsToFinish() int64 {
 				panic("direction not left or right")
 			}
 			steps += 1
-			if steps%1e6 == 0 {
-				fmt.Printf("currLabel: %s, steps: %d\n", currNode.label, steps)
-			}
 
-			if currNode.label == "ZZZ" {
+			if currNode.label == End {
 				exitFound = true
 				break
 			}
