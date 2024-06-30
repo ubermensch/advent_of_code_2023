@@ -34,5 +34,6 @@ func main() {
 		panic("could not build network")
 	}
 	steps := maze.StepsToFinish()
-	fmt.Printf("steps to finish: %d\n", steps)
+	bothSteps := maze.LcmStepsToFinish()
+	fmt.Printf("steps to finish: %d, steps to finish in parallel: %d\n", steps, bothSteps)
 }
