@@ -2,9 +2,13 @@ package main
 
 import (
 	"bufio"
+	"day_9/predictor"
 	"fmt"
+	"github.com/samber/lo"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 )
 
 const inputFile = "/Users/frankhmeidan/golang/advent_of_code/day_9/input.txt"
@@ -28,11 +32,31 @@ func main() {
 	scanner, file := fileScanner()
 	defer file.Close()
 
-	maze, err := predictor.NewDiffCalculator()
-	if err != nil {
-		panic("could not build network")
+	var allSeries []*predictor.Series
+	var histories [][]int
+	for scanner.Scan() {
+		line := scanner.Text()
+		history := lo.Map(strings.Split(line, " "), func(s string, idx int) int {
+			i, err := strconv.Atoi(s)
+			if err != nil {
+				panic("could not parse line")
+			}
+			return i
+		})
+		histories = append(histories, history)
 	}
-	steps := maze.StepsToFinish()
-	bothSteps := maze.LcmStepsToFinish()
-	fmt.Printf("steps to finish: %d, steps to finish in parallel: %d\n", steps, bothSteps)
+
+	for _, curr := range histories {
+		allSeries = append(allSeries, predictor.NewSeries(curr))
+	}
+
+	fmt.Println(" > Predictions: ")
+	totalNext := lo.Reduce(allSeries, func(total int, s *predictor.Series, idx int) int {
+		next := s.Next()
+		fmt.Println(next)
+
+		return total + next
+	}, 0)
+
+	fmt.Println("Total of all next predictions: " + strconv.Itoa(totalNext))
 }
