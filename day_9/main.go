@@ -53,7 +53,7 @@ func main() {
 	fmt.Println(" > Predictions: ")
 	totalNext := lo.Reduce(allSeries, func(total int, s *predictor.Series, idx int) int {
 		next := s.Next()
-		fmt.Println(next)
+		fmt.Println(fmt.Sprintf("%v  |  %d,", s.History, next))
 
 		return total + next
 	}, 0)

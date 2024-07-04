@@ -7,8 +7,8 @@ type predictor interface {
 }
 type Series struct {
 	predictor
-	// history of measurements for a particular value
-	history []int
+	// History of measurements for a particular value
+	History []int
 	// telescoping list of deltas between one measurement and the next,
 	// calculated until the deltas on a particular level converge to zero.
 	deltas [][]int
@@ -43,11 +43,16 @@ func getDeltas(history []int) [][]int {
 func NewSeries(history []int) *Series {
 	deltas := getDeltas(history)
 	return &Series{
-		history: history,
+		History: history,
 		deltas:  deltas,
 	}
 }
 
 func (s *Series) Next() int {
-	panic("Next() not implemented yet!")
+	deltas := s.deltas
+	nexts := []int{0}
+	for i := len(deltas) - 1; i >= 0; i-- {
+		nexts = append(nexts, deltas[i][len(deltas[i])-1]+nexts[len(nexts)-1])
+	}
+	return s.History[len(s.History)-1] + nexts[len(nexts)-1]
 }
