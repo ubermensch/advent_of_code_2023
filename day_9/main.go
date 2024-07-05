@@ -50,13 +50,16 @@ func main() {
 		allSeries = append(allSeries, predictor.NewSeries(curr))
 	}
 
-	fmt.Println(" > Predictions: ")
 	totalNext := lo.Reduce(allSeries, func(total int, s *predictor.Series, idx int) int {
 		next := s.Next()
-		fmt.Println(fmt.Sprintf("%v  |  %d,", s.History, next))
-
 		return total + next
 	}, 0)
 
+	totalPrev := lo.Reduce(allSeries, func(total int, s *predictor.Series, idx int) int {
+		previous := s.Previous()
+		return total + previous
+	}, 0)
+
 	fmt.Println("Total of all next predictions: " + strconv.Itoa(totalNext))
+	fmt.Println("Total of all prev predictions: " + strconv.Itoa(totalPrev))
 }

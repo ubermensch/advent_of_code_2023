@@ -56,3 +56,12 @@ func (s *Series) Next() int {
 	}
 	return s.History[len(s.History)-1] + nexts[len(nexts)-1]
 }
+
+func (s *Series) Previous() int {
+	deltas := s.deltas
+	prevs := []int{0}
+	for i := len(deltas) - 1; i >= 0; i-- {
+		prevs = append(prevs, deltas[i][0]-prevs[len(prevs)-1])
+	}
+	return s.History[0] - prevs[len(prevs)-1]
+}
