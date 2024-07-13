@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"day_10/maze"
+	"fmt"
 	"os"
 	"path"
 )
@@ -35,5 +36,6 @@ func main() {
 	}
 
 	maze := maze.NewMaze(lines)
-
+	fmt.Sprintln("Furthest tile distance: %v", maze.FurthestTile().Distance)
+	fmt.Println(maze)
 }
