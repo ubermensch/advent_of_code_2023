@@ -1,7 +1,6 @@
 package maze
 
 import (
-	"fmt"
 	"github.com/samber/lo"
 	"math"
 	"slices"
@@ -28,7 +27,7 @@ type Tile struct {
 	y int
 
 	// number of steps from the start of the maze to this tile's location
-	Distance int
+	distance int
 }
 
 type Maze struct {
@@ -42,8 +41,6 @@ type Maze struct {
 	loop []*Tile
 }
 
-// TODO - fix this! depends not just on t.label but on source.label. e.g:
-// if `-` is above `L`, cannot move. if `|` is above `L`, can move.
 func (t *Tile) canMoveFrom(source *Tile) bool {
 	if source.x == t.x-1 {
 		// source is left of target
@@ -124,11 +121,11 @@ func (m *Maze) neighboursOf(t *Tile) []*Tile {
 }
 
 // algorithm:
-// 1) start from S, set it's Distance (0)
-// 2) find adjacent available to move to, that doesn't have a Distance set (doesn't matter which).
-// 3) label it's Distance (1).
-// 4) move neighbour without Distance (should only be 1 left)
-// 5) label it's Distance (prev + 1)
+// 1) start from S, set it's distance (0)
+// 2) find adjacent available to move to, that doesn't have a distance set (doesn't matter which).
+// 3) label it's distance (1).
+// 4) move neighbour without distance (should only be 1 left)
+// 5) label it's distance (prev + 1)
 // 6) repeat steps 4 and 5 until reaching `S` again.
 func (m *Maze) findLoop() []*Tile {
 	start := m.start
@@ -138,35 +135,35 @@ func (m *Maze) findLoop() []*Tile {
 	loopTiles := []*Tile{}
 
 	for curr != nil {
-		curr.Distance = currDistance
+		curr.distance = currDistance
 		loopTiles = append(loopTiles, curr)
 
 		next, _ := lo.Find(m.neighboursOf(curr), func(n *Tile) bool {
-			return curr.canMoveTo(n) && n.Distance == 0
+			return curr.canMoveTo(n) && n.distance == 0
 		})
 
 		currDistance += 1
 		curr = next
 	}
 	loopTiles = append(loopTiles, start)
-	fmt.Println(lo.Map(loopTiles, func(t *Tile, _ int) string {
-		return string(t.label)
-	}))
 	return loopTiles
+}
+
+func (t *Tile) Distance() int {
+	return t.distance
 }
 
 func (m *Maze) FurthestTile() *Tile {
 	if len(m.loop) == 0 || m.loop == nil {
 		return nil
 	}
-	// TODO - Find actual Distance for elements of loop from start and
-	// end of array. Use the lesser value.
+
 	maxDist := 0
 	var furthest *Tile
 
 	for i, t := range m.loop {
 		dist := int(math.Min(float64(i), float64(len(m.loop)-1-i)))
-		t.Distance = dist
+		t.distance = dist
 
 		if dist > maxDist {
 			maxDist = dist
@@ -175,6 +172,35 @@ func (m *Maze) FurthestTile() *Tile {
 	}
 
 	return furthest
+}
+
+// returns the area enclosed by the loop,
+// implements the shoelace algorithm:
+// https://en.wikipedia.org/wiki/Shoelace_formula
+func (m *Maze) PathArea() float64 {
+	// sum the cross difference of each pair of path co-ordinates
+	doubleArea := lo.Reduce(
+		m.loop,
+		func(a int, t *Tile, i int) int {
+			// if we've reached the start at the end of the loop,
+			// we're done.
+			if i == len(m.loop)-1 {
+				return a
+			}
+			// otherwise, we find the cross difference of t(i) and t(i+1). e.g.
+			// if coords are t(i) = (1, 3) and t(i+1) = (6, 1),
+			// then cross product is (1 * 1) - (6 * 3)
+			nextT := m.loop[i+1]
+			return a + (t.x * nextT.y) - (t.y * nextT.x)
+		},
+		0,
+	)
+	area := math.Abs(float64(doubleArea / 2))
+
+	// tiles on the loop don't count as enclosed,
+	// so deduct those (don't double-count the start point)
+	area = area - float64(len(m.loop)-1)
+	return area
 }
 
 func NewMaze(lines []string) *Maze {

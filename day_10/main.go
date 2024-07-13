@@ -35,7 +35,7 @@ func main() {
 		lines = append(lines, line)
 	}
 
-	maze := maze.NewMaze(lines)
-	fmt.Sprintln("Furthest tile distance: %v", maze.FurthestTile().Distance)
-	fmt.Println(maze)
+	mz := maze.NewMaze(lines)
+	fmt.Println(fmt.Sprintf("Furthest tile distance: %v", mz.FurthestTile().Distance()))
+	fmt.Println(fmt.Sprintf("Area enclosed by loop: %v", mz.PathArea()))
 }
